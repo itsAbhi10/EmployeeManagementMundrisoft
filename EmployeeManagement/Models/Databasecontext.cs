@@ -11,5 +11,7 @@ namespace EmployeeManagement.Models
         public virtual DbSet<RegistrationModel> RegistrationModel { get; set; }
 
         public virtual DbSet<EmployeeModel> Employee { get; set; }
+
+        public virtual DbSet<ForgotPassword> pass { get; set; }
     }
 }

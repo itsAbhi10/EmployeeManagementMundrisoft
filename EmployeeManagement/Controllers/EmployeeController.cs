@@ -1,8 +1,8 @@
 ﻿using EmployeeManagement.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Win32;
 using System.Security.Cryptography;
 
@@ -34,7 +34,7 @@ namespace EmployeeManagement.Controllers
                     var res = _context.RegistrationModel.Any(data => data.EmailId == obj.EmailId && data.Password == obj.Password);
                     if (res)
                     {
-                        
+                       
                         return RedirectToAction("Employee", "Index");
                     }
                 }
@@ -147,36 +147,46 @@ namespace EmployeeManagement.Controllers
 
             return View(res);
         }
-        //[HttpPost]
-        //public IActionResult Delete(EmployeeModel del, int? EID)
-        //{
-        //    if (del == null)
-        //    {
-
-        //    }
-        //    else
-        //    {
-        //        if (ModelState.IsValid)
-        //        {
-        //            _context.Update(del);
-        //            int x = _context.SaveChanges();
-        //            if (x > 0)
-        //            {
-        //                return RedirectToAction("ViewRoom", "Admin");
-        //            }
-        //        }
-        //    }
-        //    return View();
-        //}
+        
         public IActionResult Index()
         {
             var res = from s in _context.Employee select s;
 
             return View(res.ToList());
         }
-
+        [HttpGet]
         public IActionResult Forgot()
         {
+            return View();
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Forgot(ForgotPassword pass)
+        {
+            if (pass == null)
+            {
+
+            }
+            else
+            {
+                if (ModelState.IsValid)
+                {
+                    List<Model> list;
+                    string sql = "exec sp_forgot @email, @password, @cnfpassword";
+                    List<SqlParameter> parameters = new List<SqlParameter>()
+                    {
+                        new SqlParameter{ParameterName = "@email", Value = Convert.ToString(pass.Email) },
+                        new SqlParameter{ParameterName = "@password",Value=Convert.ToString(pass.Password)},
+                        new SqlParameter{ParameterName = "@cnfpassword", Value=Convert.ToString(pass.ConfirmPassword)}
+                    };
+                    var res = _context.Database.ExecuteSqlRaw(sql, parameters.ToArray());
+                    if (res > 0)
+                    {
+                        TempData["Success"] = "Password Updated Successfully!";
+                        return RedirectToAction("Login", "Employee");
+                    }
+                }
+            }
             return View();
         }
     }
